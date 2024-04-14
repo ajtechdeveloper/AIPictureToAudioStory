@@ -3,4 +3,4 @@ python-dotenv
 gtts
 langchain
 transformers
-pytorch
+torch

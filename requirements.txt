@@ -1,0 +1,7 @@
+streamlit
+dotenv
+gtts
+langchain.chains.llm
+langchain_community.llms.huggingface_hub
+langchain_core.prompts
+transformers

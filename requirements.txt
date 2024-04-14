@@ -1,5 +1,5 @@
 streamlit
-dotenv
+python-dotenv
 gtts
 langchain.chains.llm
 langchain_community.llms.huggingface_hub

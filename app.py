@@ -7,9 +7,14 @@ from langchain_community.llms.huggingface_hub import HuggingFaceHub
 from langchain_core.prompts import PromptTemplate
 from transformers import pipeline
 
+# To be used when running locally
+# Also .env file to be created at root folder level
+# with token: HUGGINGFACEHUB_API_TOKEN = <Your HuggingFace Hub API Token>
 # load_dotenv(find_dotenv())
+# To be used when deploying to Streamlit Cloud
 hf_token = st.secrets["HUGGINGFACE_TOKEN"]["token"]
 os.environ["HUGGINGFACEHUB_API_TOKEN"] = hf_token
+
 
 # Text to Audio
 def text_to_audio(story):

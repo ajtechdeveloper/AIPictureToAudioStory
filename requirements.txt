@@ -3,3 +3,4 @@ python-dotenv
 gtts
 langchain
 transformers
+tensorflow

@@ -60,8 +60,7 @@ def image_to_text(url):
 def main():
     st.set_page_config(page_title="Picture to Audio Story", page_icon=":)")
     st.header("AI In Action: Transform A Picture To An Audio Story")
-    st.text("This App uses AI to generate a caption for any uploaded picture and "
-            "an audio story using the caption")
+    st.markdown("This App uses AI to generate a caption for any uploaded picture and an audio story using the caption")
     uploaded_file = st.file_uploader("Choose an image", type="jpg")
 
     if uploaded_file is not None:

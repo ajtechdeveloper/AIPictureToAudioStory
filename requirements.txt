@@ -4,3 +4,4 @@ gtts
 langchain
 transformers
 torch
+tf-keras==2.16.0

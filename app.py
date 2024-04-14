@@ -72,7 +72,7 @@ def main():
         story = story_generator(scenario)
         text_to_audio(story)
 
-        with st.expander("Context"):
+        with st.expander("Caption"):
             st.write(scenario)
         with st.expander("Story"):
             st.write(story)

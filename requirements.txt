@@ -3,4 +3,4 @@ python-dotenv
 gtts
 langchain
 transformers
-tensorflow~=2.16
+tensorflow~=2.13

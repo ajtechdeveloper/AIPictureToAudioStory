@@ -1,13 +1,15 @@
 import streamlit as st
 from dotenv import find_dotenv, load_dotenv
+import os
 from gtts import gTTS
 from langchain.chains.llm import LLMChain
 from langchain_community.llms.huggingface_hub import HuggingFaceHub
 from langchain_core.prompts import PromptTemplate
 from transformers import pipeline
 
-load_dotenv(find_dotenv())
-
+# load_dotenv(find_dotenv())
+hf_token = st.secrets["HUGGINGFACE_TOKEN"]["token"]
+os.environ["HUGGINGFACEHUB_API_TOKEN"] = hf_token
 
 # Text to Audio
 def text_to_audio(story):

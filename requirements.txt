@@ -3,7 +3,7 @@ python-dotenv
 gtts
 langchain
 langchain-community
-transformers==4.11.3
+transformers==4.28.0
 torch
 tf-keras==2.16.0
 

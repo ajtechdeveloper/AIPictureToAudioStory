@@ -3,7 +3,7 @@ from dotenv import find_dotenv, load_dotenv
 import os
 from gtts import gTTS
 from langchain.chains.llm import LLMChain
-from langchain_community.llms.huggingface_hub import HuggingFaceHub
+from langchain_community.llms import HuggingFaceHub
 from langchain_core.prompts import PromptTemplate
 from transformers import pipeline
 

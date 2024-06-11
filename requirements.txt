@@ -1,10 +1,9 @@
-python==3.9
 streamlit
 python-dotenv
 gtts
 langchain
 langchain-community
-transformers
+transformers==4.11.3
 torch
 tf-keras==2.16.0
 

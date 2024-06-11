@@ -1,8 +1,10 @@
+python_version=="3.9"
 streamlit
 python-dotenv
 gtts
 langchain
 langchain-community
-transformers==4.28.0
-tensorflow
+transformers
+torch
+tf-keras==2.16.0
 

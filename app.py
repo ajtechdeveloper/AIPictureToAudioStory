@@ -61,6 +61,8 @@ def main():
     st.set_page_config(page_title="Picture to Audio Story", page_icon=":)")
     st.header("AI In Action: Transform A Picture To An Audio Story")
     st.markdown("This App uses AI to generate a caption for any uploaded picture and a short audio story using the caption.")
+    st.markdown("The code for this App is available on [GitHub](https://github.com/ajtechdeveloper/AIPictureToAudioStory)")
+    st.markdown("For a full tutorial about this App, please refer to my blog post: [Generative AI App LangChain Hugging Face Open Source Models Tutorial](https://softwaredevelopercentral.blogspot.com/2024/05/generative-ai-app-langchain-hugging.html)")
     uploaded_file = st.file_uploader("Choose an image", type="jpg")
 
     if uploaded_file is not None:

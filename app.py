@@ -2,6 +2,11 @@ import streamlit as st
 from dotenv import find_dotenv, load_dotenv
 import os
 from gtts import gTTS
+import torch
+# Force CPU usage
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
+torch.set_num_threads(4)
+
 from transformers import pipeline
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain.chains import LLMChain
@@ -25,7 +30,8 @@ def load_generator():
         model="distilgpt2",
         max_length=100,
         pad_token_id=50256,
-        temperature=0.7
+        temperature=0.7,
+        device=-1  # Force CPU usage
     )
 
 # Generate Story using Langchain

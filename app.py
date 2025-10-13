@@ -43,8 +43,8 @@ def story_generator(scenario):
         )
         
         # Create prompt
-        prompt = f"""Create a very short story (maximum 60 words) about this scene: {scenario}
-        The story must be directly related to the scene and be creative.
+        prompt = f"""Create a short story less than 60 words about the caption: {scenario}
+        The story must be directly related to the caption and be creative.
         Story: """
         
         # Generate story with controlled length

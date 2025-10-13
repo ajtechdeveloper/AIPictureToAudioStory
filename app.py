@@ -38,7 +38,7 @@ def story_generator(scenario):
         # Initialize the text generation model
         generator = pipeline(
             'text-generation',
-            model='facebook/opt-350m',
+            model='mistralai/Mistral-7B-v0.1',
             token=hf_token
         )
         

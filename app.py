@@ -15,72 +15,63 @@ from transformers import pipeline
 hf_token = st.secrets["HUGGINGFACE_TOKEN"]["token"]
 os.environ["HUGGINGFACEHUB_API_TOKEN"] = hf_token
 
-
-# Text to Audio
-def text_to_audio(story):
-    # Language to be used
-    language = 'en'
-    # Create Audio
-    audio = gTTS(text=story, lang=language, slow=False)
-    # Save the audio converted as a mp3 file
-    audio.save("audio.mp3")
-
+# Cache the model loading to improve performance
+@st.cache_resource
+def load_generator():
+    """Cache the model loading to avoid reloading on every rerun"""
+    return pipeline(
+        "text-generation",
+        model="distilgpt2",
+        max_length=100
+    )
 
 # Generate Story using Langchain
 def story_generator(scenario):
     template = """
-    You are a story teller;
-    You can generate short stories based on a simple narrative
-    Your story should be no more than 60 words.
-
-    CONTEXT: {scenario}
-    STORY:
+    Write a very short story based on this scene: {scenario}
+    The story should be creative and engaging but no more than 60 words.
     """
+
     try:
-        # Use a smaller, more reliable model
-        repo_id = "gpt2"  # This is a well-supported model on the HF API
+        # Get the cached model
+        text_generator = load_generator()
         
-        print(f"Attempting to generate story for scenario: {scenario}")
-        print(f"Using model: {repo_id}")
+        # Wrap the pipeline in LangChain
+        llm = HuggingFacePipeline(pipeline=text_generator)
         
-        llm = HuggingFaceHub(
-            repo_id=repo_id,
-            task="text-generation",
-            model_kwargs={
-                "temperature": 0.7,
-                "max_new_tokens": 100,
-                "do_sample": True,
-                "top_k": 50,
-            },
-            huggingfacehub_api_token=os.environ["HUGGINGFACEHUB_API_TOKEN"]
-        )
-        
+        # Create the prompt template
         prompt = PromptTemplate(
             template=template,
             input_variables=["scenario"]
         )
         
-        story_llm = LLMChain(prompt=prompt, llm=llm, verbose=True)
+        # Create the chain
+        story_llm = LLMChain(prompt=prompt, llm=llm)
         
-        print("Attempting to generate story...")
-        story = story_llm.predict(scenario=scenario)
-        print(f"Raw story output: {story}")
+        # Generate the story
+        with st.spinner('Generating story...'):
+            story = story_llm.predict(scenario=scenario)
         
-        # Clean up the story output
+        # Clean up the output
         story = story.strip()
         if not story:
             raise ValueError("Generated story is empty")
             
-        print(f"Final story: {story}")
         return story
         
     except Exception as e:
-        print(f"Error details: {str(e)}")
-        print(f"Error type: {type(e)}")
-        print(f"Current HF token status: {'Set' if os.environ.get('HUGGINGFACEHUB_API_TOKEN') else 'Not Set'}")
+        st.error(f"Error in story generation: {str(e)}")
         return f"Story generation failed: {str(e)}"
-    
-
+        
+# Text to Audio
+def text_to_audio(story):
+    try:
+        with st.spinner('Converting to audio...'):
+            language = 'en'
+            audio = gTTS(text=story, lang=language, slow=False)
+            audio.save("audio.mp3")
+    except Exception as e:
+        st.error(f"Error in audio generation: {str(e)}")
 
 # Image to text
 def image_to_text(url):
@@ -96,24 +87,57 @@ def main():
     st.markdown("This App uses AI to generate a caption for any uploaded picture and a short audio story using the caption.")
     st.markdown("The code for this App is available on [GitHub](https://github.com/ajtechdeveloper/AIPictureToAudioStory)")
     st.markdown("For a full tutorial about this App, please refer to my blog post: [Generative AI App LangChain Hugging Face Open Source Models Tutorial](https://softwaredevelopercentral.blogspot.com/2024/05/generative-ai-app-langchain-hugging.html)")
+    # Add a loading message while the model is being loaded
+    if 'model_loaded' not in st.session_state:
+        with st.spinner('Loading AI model... This may take a minute on first run...'):
+            load_generator()
+            st.session_state.model_loaded = True
+    
     uploaded_file = st.file_uploader("Choose an image", type="jpg")
 
     if uploaded_file is not None:
-        print(uploaded_file)
-        bytes_data = uploaded_file.getvalue()
-        with open(uploaded_file.name, "wb") as file:
-            file.write(bytes_data)
-        st.image(uploaded_file, caption="Uploaded Image", use_container_width=True)
-        scenario = image_to_text(uploaded_file.name)
-        story = story_generator(scenario)
-        text_to_audio(story)
-
-        with st.expander("Caption"):
-            st.write(scenario)
-        with st.expander("Story"):
-            st.write(story)
-        st.audio("audio.mp3")
-
+        try:
+            # Create a placeholder for the image
+            image_placeholder = st.empty()
+            image_placeholder.image(uploaded_file, caption="Uploaded Image", use_container_width=True)
+            
+            # Save the file temporarily
+            bytes_data = uploaded_file.getvalue()
+            with open(uploaded_file.name, "wb") as file:
+                file.write(bytes_data)
+            
+            # Generate caption
+            with st.spinner('Analyzing image...'):
+                scenario = image_to_text(uploaded_file.name)
+            
+            # Generate story
+            story = story_generator(scenario)
+            
+            if not story.startswith("Story generation failed"):
+                # Generate audio
+                text_to_audio(story)
+                
+                # Display results in a clean layout
+                col1, col2 = st.columns(2)
+                with col1:
+                    with st.expander("📝 Caption", expanded=True):
+                        st.write(scenario)
+                with col2:
+                    with st.expander("📖 Story", expanded=True):
+                        st.write(story)
+                
+                # Audio player
+                st.subheader("🎧 Listen to the Story")
+                st.audio("audio.mp3")
+            else:
+                st.error(story)
+                
+        except Exception as e:
+            st.error(f"An error occurred: {str(e)}")
+        finally:
+            # Clean up the temporary file
+            if os.path.exists(uploaded_file.name):
+                os.remove(uploaded_file.name)
 
 if __name__ == '__main__':
     main()

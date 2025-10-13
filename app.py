@@ -38,57 +38,54 @@ def story_generator(scenario):
         # Initialize the text generation model
         generator = pipeline(
             'text-generation',
-            model='mistralai/Mistral-7B-v0.1',
-            token=hf_token
+            model='databricks/dolly-v2-12b',
+            token=hf_token,
+            device_map='auto'  # Automatically handle device placement
         )
-
-        # Template with context
+        
+        # Template and Context structure optimized for Dolly
         template = """
-        <|system|>
-        You are a creative storyteller who writes engaging, descriptive stories.
+        ### Instruction ###
+        You are a creative storyteller. Write an engaging story based on the given context.
 
-        <|context|>
-        SCENE DESCRIPTION: {scenario}
+        ### Context ###
+        Scene Description: {scenario}
 
-        STORY REQUIREMENTS:
-        - Length: 40-60 words
-        - Style: Descriptive and engaging
-        - Structure: Clear beginning, middle, and end
-        - Focus: Stay relevant to the scene
-        - Tone: Creative and imaginative
+        Story Requirements:
+        - Word count: 40-60 words
+        - Must be descriptive and vivid
+        - Must have a clear narrative arc
+        - Must relate directly to the scene
+        - Must be engaging and creative
 
-        <|template|>
-        Using the above context, write a story that:
-        1. Begins with a strong opening
-        2. Develops the scene naturally
-        3. Concludes meaningfully
-        4. Captures the essence of the described scene
+        ### Response Format ###
+        Provide a story that captures the essence of the scene while meeting all requirements.
 
-        <|story|>
+        ### Response ###
         """
         
         # Format the template with the scenario
         formatted_prompt = template.format(scenario=scenario)
         
-        # Generate story
+        # Generate story with Dolly
         result = generator(
-            prompt,
+            formatted_prompt,
             max_new_tokens=200,
             temperature=1,
-            top_p=0.85,
+            top_p=0.9,
             do_sample=True,
             num_return_sequences=1,
             repetition_penalty=1.2,
             pad_token_id=generator.tokenizer.eos_token_id
         )
-
+        
         # Extract story from generated text
         generated_text = result[0]['generated_text']
         
         # Clean up the story
-        # Extract text after <|story|> tag
-        story = generated_text.split("<|story|>")[-1].strip()
-
+        # Extract text after "### Response ###"
+        story = generated_text.split("### Response ###")[-1].strip()
+        
         # Clean up formatting
         story = ' '.join(story.split())
 
@@ -115,19 +112,16 @@ def main():
     )
     
     st.title("AI In Action: Transform A Picture To An Audio Story")
-    st.markdown("This App uses AI to generate a caption for any uploaded picture and a short audio story using the caption.")
-    st.markdown("The code for this App is available on [GitHub](https://github.com/ajtechdeveloper/AIPictureToAudioStory)")
-    st.markdown("For a full tutorial about this App, please refer to my blog post: [Generative AI App LangChain Hugging Face Open Source Models Tutorial](https://softwaredevelopercentral.blogspot.com/2024/05/generative-ai-app-langchain-hugging.html)")
-    
-    
     # Add information about the app
     st.markdown("""
-    This app:
+    Using AI this App:
     1. Generates a caption for your image 📝
     2. Creates a short story based on the caption 📖
     3. Converts the story to audio 🎧
     """)
-
+    st.markdown("The code for this App is available on [GitHub](https://github.com/ajtechdeveloper/AIPictureToAudioStory)")
+    st.markdown("For a full tutorial about this App, please refer to my blog post: [Generative AI App LangChain Hugging Face Open Source Models Tutorial](https://softwaredevelopercentral.blogspot.com/2024/05/generative-ai-app-langchain-hugging.html)")
+    
     # File uploader
     uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 

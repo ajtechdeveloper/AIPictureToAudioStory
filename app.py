@@ -2,10 +2,11 @@ import streamlit as st
 from dotenv import find_dotenv, load_dotenv
 import os
 from gtts import gTTS
+from transformers import pipeline
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
-from transformers import pipeline
+from langchain.schema import Generation, LLMResult
 
 # To be used when running locally
 # Also .env file to be created at root folder level
@@ -22,7 +23,9 @@ def load_generator():
     return pipeline(
         "text-generation",
         model="distilgpt2",
-        max_length=100
+        max_length=100,
+        pad_token_id=50256,
+        temperature=0.7
     )
 
 # Generate Story using Langchain
@@ -36,8 +39,22 @@ def story_generator(scenario):
         # Get the cached model
         text_generator = load_generator()
         
-        # Wrap the pipeline in LangChain
-        llm = HuggingFacePipeline(pipeline=text_generator)
+        # Create a custom HuggingFacePipeline instance with required methods
+        class CustomHuggingFacePipeline(HuggingFacePipeline):
+            def _call(self, prompt: str, stop=None, run_manager=None) -> str:
+                response = self.pipeline(prompt, max_length=100, do_sample=True)
+                return response[0]['generated_text']
+
+            def _generate(self, prompts, stop=None, run_manager=None) -> LLMResult:
+                generations = []
+                for prompt in prompts:
+                    response = self.pipeline(prompt, max_length=100, do_sample=True)
+                    text = response[0]['generated_text']
+                    generations.append([Generation(text=text)])
+                return LLMResult(generations=generations)
+
+        # Create the LLM instance
+        llm = CustomHuggingFacePipeline(pipeline=text_generator)
         
         # Create the prompt template
         prompt = PromptTemplate(
@@ -50,7 +67,7 @@ def story_generator(scenario):
         
         # Generate the story
         with st.spinner('Generating story...'):
-            story = story_llm.predict(scenario=scenario)
+            story = story_llm.run(scenario=scenario)
         
         # Clean up the output
         story = story.strip()
@@ -87,6 +104,7 @@ def main():
     st.markdown("This App uses AI to generate a caption for any uploaded picture and a short audio story using the caption.")
     st.markdown("The code for this App is available on [GitHub](https://github.com/ajtechdeveloper/AIPictureToAudioStory)")
     st.markdown("For a full tutorial about this App, please refer to my blog post: [Generative AI App LangChain Hugging Face Open Source Models Tutorial](https://softwaredevelopercentral.blogspot.com/2024/05/generative-ai-app-langchain-hugging.html)")
+    
     # Add a loading message while the model is being loaded
     if 'model_loaded' not in st.session_state:
         with st.spinner('Loading AI model... This may take a minute on first run...'):
@@ -97,7 +115,7 @@ def main():
 
     if uploaded_file is not None:
         try:
-            # Create a placeholder for the image
+            # Display the image
             st.image(uploaded_file, caption="Uploaded Image", width=600)
             
             # Save the file temporarily
@@ -116,14 +134,12 @@ def main():
                 # Generate audio
                 text_to_audio(story)
                 
-                # Display results in a clean layout
-                col1, col2 = st.columns(2)
-                with col1:
-                    with st.expander("📝 Caption", expanded=True):
-                        st.write(scenario)
-                with col2:
-                    with st.expander("📖 Story", expanded=True):
-                        st.write(story)
+                # Display results
+                st.subheader("📝 Image Caption")
+                st.write(scenario)
+                
+                st.subheader("📖 Generated Story")
+                st.write(story)
                 
                 # Audio player
                 st.subheader("🎧 Listen to the Story")

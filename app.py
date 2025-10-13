@@ -38,36 +38,34 @@ def story_generator(scenario):
         # Initialize the text generation model
         generator = pipeline(
             'text-generation',
-            model='databricks/dolly-v2-12b',
+            model='tiiuae/falcon-7b',
             token=hf_token,
-            device_map='auto'  # Automatically handle device placement
+            trust_remote_code=True,
+            device_map='auto'
         )
         
-        # Template and Context structure optimized for Dolly
+        # Template and Context structure
         template = """
         ### Instruction ###
-        You are a creative storyteller. Write an engaging story based on the given context.
+        Create an engaging short story based on the following scene description.
 
         ### Context ###
-        Scene Description: {scenario}
+        Scene: {scenario}
 
-        Story Requirements:
+        ### Requirements ###
         - Word count: 40-60 words
-        - Must be descriptive and vivid
-        - Must have a clear narrative arc
+        - Style: Descriptive and engaging
+        - Structure: Clear beginning, middle, and end
         - Must relate directly to the scene
-        - Must be engaging and creative
+        - Must be creative and vivid
 
-        ### Response Format ###
-        Provide a story that captures the essence of the scene while meeting all requirements.
-
-        ### Response ###
+        ### Story ###
         """
         
         # Format the template with the scenario
         formatted_prompt = template.format(scenario=scenario)
         
-        # Generate story with Dolly
+        # Generate story
         result = generator(
             formatted_prompt,
             max_new_tokens=200,
@@ -83,8 +81,7 @@ def story_generator(scenario):
         generated_text = result[0]['generated_text']
         
         # Clean up the story
-        # Extract text after "### Response ###"
-        story = generated_text.split("### Response ###")[-1].strip()
+        story = generated_text.split("### Story ###")[-1].strip()
         
         # Clean up formatting
         story = ' '.join(story.split())

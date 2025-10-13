@@ -60,10 +60,8 @@ def story_generator(scenario):
             actual_story = res[1].strip()
         else:
             actual_story = story.strip()
-        
         print(f"Generated story: {actual_story}")
         return actual_story
-        
     except Exception as e:
         print(f"Error generating story: {str(e)}")
         return "I apologize, but I couldn't generate a story at the moment. Please try again."

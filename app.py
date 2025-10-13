@@ -55,7 +55,7 @@ def story_generator(scenario):
         result = generator(
             template,
             max_length=150,
-            temperature=0.8,
+            temperature=1,
             top_p=0.9,
             do_sample=True,
             num_return_sequences=1,

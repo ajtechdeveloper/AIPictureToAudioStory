@@ -38,7 +38,7 @@ def story_generator(scenario):
         # Initialize the text generation model
         generator = pipeline(
             'text-generation',
-            model='TinyLlama/TinyLlama-1.1B-Chat-v1.0',
+            model='facebook/opt-350m',
             token=hf_token
         )
         

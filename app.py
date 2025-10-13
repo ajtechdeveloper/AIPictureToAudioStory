@@ -43,23 +43,28 @@ def story_generator(scenario):
         )
         
         # Create prompt
-        prompt = f"You are a story teller. You can generate short stories based on a simple narrative. Write a short story about the context: {scenario}. Your story should be no more than 60 words."
+        prompt = f"""Create a very short story (maximum 60 words) about this scene: {scenario}
+        The story must be directly related to the scene and be creative.
+        Story: """
         
-        # Generate story
+        # Generate story with controlled length
         result = generator(
             prompt, 
-            max_length=100, 
+            max_length=150,  # Increased to give room for the prompt
             num_return_sequences=1,
-            pad_token_id=generator.tokenizer.eos_token_id
+            temperature=0.7,  # Add some randomness but not too much
+            top_p=0.9,
+            pad_token_id=generator.tokenizer.eos_token_id,
+            do_sample=True
         )
         
-        # Extract and clean the generated story
-        story = result[0]['generated_text'].strip()
+        # Extract the generated text
+        generated_text = result[0]['generated_text']
         
         # Remove the prompt from the generated text
-        if story.startswith(prompt):
-            story = story[len(prompt):].strip()
-            
+        story = generated_text.split("Story: ")[-1].strip()
+        # Clean up the story
+        story = story.replace('\n', ' ').strip()  
         return story
     except Exception as e:
         st.error(f"Error in story generation: {str(e)}")

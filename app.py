@@ -43,13 +43,13 @@ def story_generator(scenario):
         )
         
         # Create prompt
-        prompt = f"""Task: Write a creative and engaging story in less than 60 words.
+        prompt = f"""Task: Write a creative and engaging story about the topic mentioned below.
         Topic: {scenario}
         Requirements: 
-        - Story must be directly related to the topic
-        - Must be imaginative and interesting
+        - You are a story teller
+        - You can generate short stories based on a simple narrative
+        - Your story should be no more than 60 words
         - Must be complete with a beginning and end
-        - Must be less than 60 words
         
         Story:"""
         

@@ -43,7 +43,9 @@ def story_generator(scenario):
         )
         
         # Create prompt
-        prompt = f"Write a short story about this scene: {scenario}. The story should be less than 60 words."
+        prompt = f"You are a story teller;
+                   You can generate short stories based on a simple narrative
+                   Write a short story about the context: {scenario}. Your story should be no more than 60 words."
         
         # Generate story
         result = generator(

@@ -37,7 +37,7 @@ def story_generator(scenario):
     STORY:
     """
 
-    repo_id = "HuggingFaceH4/zephyr-7b-beta"
+    repo_id = "google/flan-t5-small"
     llm = HuggingFaceHub(repo_id=repo_id, model_kwargs={"temperature": 1, "max_length": 64})
     prompt = PromptTemplate(template=template, input_variables=["scenario"])
     story_llm = LLMChain(prompt=prompt, llm=llm)

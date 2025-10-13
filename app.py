@@ -38,7 +38,7 @@ def story_generator(scenario):
         # Initialize the text generation model
         generator = pipeline(
             'text2text-generation',
-            model='google/flan-t5-base',
+            model='google/flan-t5-large',
             token=hf_token
         )
 

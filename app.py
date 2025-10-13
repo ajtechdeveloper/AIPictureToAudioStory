@@ -37,8 +37,8 @@ def story_generator(scenario):
     try:
         # Initialize the text generation model
         generator = pipeline(
-            'text2text-generation',
-            model='google/flan-t5-large',
+            'text-generation',
+            model='mistralai/Mistral-7B-v0.1',
             token=hf_token
         )
 
@@ -56,18 +56,24 @@ def story_generator(scenario):
         
         # Generate story
         result = generator(
-            context,
-            max_length=100,
-            num_return_sequences=1,
+            prompt,
+            max_new_tokens=200,
             temperature=1,
-            do_sample=True
+            top_p=0.85,
+            do_sample=True,
+            num_return_sequences=1,
+            repetition_penalty=1.2,
+            pad_token_id=generator.tokenizer.eos_token_id
         )
         
-        # Extract and clean the story
-        story = result[0]['generated_text'].strip()
-        # If story is too short, try again
-        if len(story.split()) < 10:
-            return story_generator(scenario)
+        # Extract the story from the generated text
+        generated_text = result[0]['generated_text']
+        
+        # Clean up the story
+        story = generated_text.split("Story:")[-1].strip()
+
+        # Clean up formatting
+        story = story.replace('\n', ' ').strip()
 
         return story
     except Exception as e:

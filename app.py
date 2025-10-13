@@ -37,17 +37,19 @@ def story_generator(scenario):
     STORY:
     """
 
-    repo_id = "tiiuae/falcon-7b-instruct"
+    repo_id = "gpt2"
     
     llm = HuggingFaceHub(
-        repo_id=repo_id,
-        task="text-generation",
-        model_kwargs={
-            "temperature": 0.7,
-            "max_length": 100,
-            "max_new_tokens": 100,
-        }
-    )
+            repo_id=repo_id,
+            task="text-generation",
+            model_kwargs={
+                "temperature": 0.7,
+                "max_new_tokens": 100,
+                "do_sample": True,
+                "top_k": 50,
+            },
+            huggingfacehub_api_token=os.environ["HUGGINGFACEHUB_API_TOKEN"]
+        )
     
     prompt = PromptTemplate(template=template, input_variables=["scenario"])
     story_llm = LLMChain(prompt=prompt, llm=llm)

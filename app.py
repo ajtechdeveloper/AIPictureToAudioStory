@@ -41,36 +41,33 @@ def story_generator(scenario):
             model='google/flan-t5-base',
             token=hf_token
         )
+
+        # Template with context
+        template = """
+        You are a story teller;
+        You can generate short stories based on a simple narrative
+        Your story should be no more than 60 words.
         
-        # Create prompt
-        prompt = f"""Task: Write a creative and engaging story about the topic mentioned below.
-        Topic: {scenario}
-        Requirements: 
-        - You are a story teller
-        - You can generate short stories based on a simple narrative
-        - Your story should be no more than 60 words
-        - Must be complete with a beginning and end
+        CONTEXT: {scenario}
+        STORY:"""
         
-        Story:"""
+        # Format the template with the scenario
+        context = template.format(scenario=scenario)
         
-        # Generate story with controlled length
+        # Generate story
         result = generator(
-            prompt,
+            context,
             max_length=100,
             num_return_sequences=1,
-            temperature=1,  # Slightly higher for creativity
-            do_sample=True,
-            no_repeat_ngram_size=2  # Prevent repetitive phrases
+            temperature=1,
+            do_sample=True
         )
         
-        # Extract the story
+        # Extract and clean the story
         story = result[0]['generated_text'].strip()
-        
-        # Clean up and format the story
-        story = ' '.join(story.split())
-        # Ensure the story ends with proper punctuation
-        if not story.endswith(('.', '!', '?')):
-            story += '.'
+        # If story is too short, try again
+        if len(story.split()) < 10:
+            return story_generator(scenario)
 
         return story
     except Exception as e:

@@ -38,50 +38,34 @@ def story_generator(scenario):
         # Initialize the text generation model
         generator = pipeline(
             'text-generation',
-            model='tiiuae/falcon-7b',
-            token=hf_token,
-            trust_remote_code=True,
-            device_map='auto'
+            model='facebook/opt-350m',
+            token=hf_token
         )
         
-        # Template and Context structure
-        template = """
-        ### Instruction ###
-        Create an engaging short story based on the following scene description.
-
-        ### Context ###
-        Scene: {scenario}
-
-        ### Requirements ###
-        - Word count: 40-60 words
-        - Style: Descriptive and engaging
-        - Structure: Clear beginning, middle, and end
-        - Must relate directly to the scene
-        - Must be creative and vivid
-
-        ### Story ###
-        """
+        # Template optimized for OPT model
+        template = f"""Write a creative story about this scene: {scenario}
+        Requirements:
+        - Between 40 and 60 words
+        - Descriptive and engaging
+        - Related to the scene
         
-        # Format the template with the scenario
-        formatted_prompt = template.format(scenario=scenario)
+        Story: """
         
         # Generate story
         result = generator(
-            formatted_prompt,
-            max_new_tokens=200,
-            temperature=1,
+            template,
+            max_length=150,
+            temperature=0.8,
             top_p=0.9,
             do_sample=True,
             num_return_sequences=1,
             repetition_penalty=1.2,
-            pad_token_id=generator.tokenizer.eos_token_id
+            early_stopping=True
         )
         
-        # Extract story from generated text
+        # Extract and clean the story
         generated_text = result[0]['generated_text']
-        
-        # Clean up the story
-        story = generated_text.split("### Story ###")[-1].strip()
+        story = generated_text.split("Story:")[-1].strip()
         
         # Clean up formatting
         story = ' '.join(story.split())

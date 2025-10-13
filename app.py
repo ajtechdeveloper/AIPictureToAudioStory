@@ -37,34 +37,41 @@ def story_generator(scenario):
     try:
         # Initialize the text generation model
         generator = pipeline(
-            'text-generation', 
-            model='gpt2',
+            'text2text-generation',
+            model='google/flan-t5-base',
             token=hf_token
         )
         
         # Create prompt
-        prompt = f"""Create a short story less than 60 words about the caption: {scenario}
-        The story must be directly related to the caption and be creative.
-        Story: """
+        prompt = f"""Task: Write a creative and engaging story in less than 60 words.
+        Topic: {scenario}
+        Requirements: 
+        - Story must be directly related to the topic
+        - Must be imaginative and interesting
+        - Must be complete with a beginning and end
+        - Must be less than 60 words
+        
+        Story:"""
         
         # Generate story with controlled length
         result = generator(
-            prompt, 
-            max_length=150,  # Increased to give room for the prompt
+            prompt,
+            max_length=100,
             num_return_sequences=1,
-            temperature=0.7,  # Add some randomness but not too much
-            top_p=0.9,
-            pad_token_id=generator.tokenizer.eos_token_id,
-            do_sample=True
+            temperature=1,  # Slightly higher for creativity
+            do_sample=True,
+            no_repeat_ngram_size=2  # Prevent repetitive phrases
         )
         
-        # Extract the generated text
-        generated_text = result[0]['generated_text']
+        # Extract the story
+        story = result[0]['generated_text'].strip()
         
-        # Remove the prompt from the generated text
-        story = generated_text.split("Story: ")[-1].strip()
-        # Clean up the story
-        story = story.replace('\n', ' ').strip()  
+        # Clean up and format the story
+        story = ' '.join(story.split())
+        # Ensure the story ends with proper punctuation
+        if not story.endswith(('.', '!', '?')):
+            story += '.'
+
         return story
     except Exception as e:
         st.error(f"Error in story generation: {str(e)}")

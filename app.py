@@ -2,7 +2,7 @@ import streamlit as st
 from dotenv import find_dotenv, load_dotenv
 import os
 from gtts import gTTS
-from langchain_community.llms import HuggingFaceHub
+from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from transformers import pipeline

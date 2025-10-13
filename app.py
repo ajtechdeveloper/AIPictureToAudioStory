@@ -1,17 +1,8 @@
 import streamlit as st
-from dotenv import find_dotenv, load_dotenv
 import os
-from gtts import gTTS
-import torch
-# Force CPU usage
-os.environ['CUDA_VISIBLE_DEVICES'] = ''
-torch.set_num_threads(4)
-
 from transformers import pipeline
-from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
-from langchain.chains import LLMChain
-from langchain.prompts import PromptTemplate
-from langchain.schema import Generation, LLMResult
+from gtts import gTTS
+from huggingface_hub import login
 
 # To be used when running locally
 # Also .env file to be created at root folder level
@@ -20,145 +11,130 @@ from langchain.schema import Generation, LLMResult
 # To be used when deploying to Streamlit Cloud
 hf_token = st.secrets["HUGGINGFACE_TOKEN"]["token"]
 os.environ["HUGGINGFACEHUB_API_TOKEN"] = hf_token
+login(token=hf_token)  # Login to Hugging Face
 
-# Cache the model loading to improve performance
-@st.cache_resource
-def load_generator():
-    """Cache the model loading to avoid reloading on every rerun"""
-    return pipeline(
-        "text-generation",
-        model="distilgpt2",
-        max_length=100,
-        pad_token_id=50256,
-        temperature=0.7,
-        device=-1  # Force CPU usage
-    )
-
-# Generate Story using Langchain
-def story_generator(scenario):
-    template = """
-    Write a very short story based on this scene: {scenario}
-    The story should be creative and engaging but no more than 60 words.
-    """
-
+def image_to_text(image_path):
+    """Generate caption for the uploaded image"""
     try:
-        # Get the cached model
-        text_generator = load_generator()
-        
-        # Create a custom HuggingFacePipeline instance with required methods
-        class CustomHuggingFacePipeline(HuggingFacePipeline):
-            def _call(self, prompt: str, stop=None, run_manager=None) -> str:
-                response = self.pipeline(prompt, max_length=100, do_sample=True)
-                return response[0]['generated_text']
-
-            def _generate(self, prompts, stop=None, run_manager=None) -> LLMResult:
-                generations = []
-                for prompt in prompts:
-                    response = self.pipeline(prompt, max_length=100, do_sample=True)
-                    text = response[0]['generated_text']
-                    generations.append([Generation(text=text)])
-                return LLMResult(generations=generations)
-
-        # Create the LLM instance
-        llm = CustomHuggingFacePipeline(pipeline=text_generator)
-        
-        # Create the prompt template
-        prompt = PromptTemplate(
-            template=template,
-            input_variables=["scenario"]
+        # Initialize the image captioning model
+        caption_model = pipeline(
+            "image-to-text", 
+            model="Salesforce/blip-image-captioning-base",
+            token=hf_token
         )
         
-        # Create the chain
-        story_llm = LLMChain(prompt=prompt, llm=llm)
+        # Generate caption
+        result = caption_model(image_path)
         
-        # Generate the story
-        with st.spinner('Generating story...'):
-            story = story_llm.run(scenario=scenario)
+        # Return the generated caption
+        return result[0]['generated_text']
+    except Exception as e:
+        st.error(f"Error in image captioning: {str(e)}")
+        raise
+
+def story_generator(scenario):
+    """Generate a short story based on the image caption"""
+    try:
+        # Initialize the text generation model
+        generator = pipeline(
+            'text-generation', 
+            model='gpt2',
+            token=hf_token
+        )
         
-        # Clean up the output
-        story = story.strip()
-        if not story:
-            raise ValueError("Generated story is empty")
+        # Create prompt
+        prompt = f"Write a short story about this scene: {scenario}. The story should be less than 60 words."
+        
+        # Generate story
+        result = generator(
+            prompt, 
+            max_length=100, 
+            num_return_sequences=1,
+            pad_token_id=generator.tokenizer.eos_token_id
+        )
+        
+        # Extract and clean the generated story
+        story = result[0]['generated_text'].strip()
+        
+        # Remove the prompt from the generated text
+        if story.startswith(prompt):
+            story = story[len(prompt):].strip()
             
         return story
-        
     except Exception as e:
         st.error(f"Error in story generation: {str(e)}")
-        return f"Story generation failed: {str(e)}"
-        
-# Text to Audio
-def text_to_audio(story):
+        raise
+
+def text_to_audio(text):
+    """Convert text to audio"""
     try:
-        with st.spinner('Converting to audio...'):
-            language = 'en'
-            audio = gTTS(text=story, lang=language, slow=False)
-            audio.save("audio.mp3")
+        # Create audio file
+        tts = gTTS(text=text, lang='en', slow=False)
+        tts.save("audio.mp3")
     except Exception as e:
         st.error(f"Error in audio generation: {str(e)}")
-
-# Image to text
-def image_to_text(url):
-    caption_creator = pipeline("image-to-text", model="Salesforce/blip-image-captioning-base")
-    text = caption_creator(url)[0]["generated_text"]
-    print(text)
-    return text
-
+        raise
 
 def main():
-    st.set_page_config(page_title="Picture to Audio Story", page_icon=":)")
-    st.header("AI In Action: Transform A Picture To An Audio Story")
+    # Set up the Streamlit page
+    st.set_page_config(
+        page_title="AI Picture to Audio Story",
+        page_icon="📸"
+    )
+    
+    st.title("AI In Action: Transform A Picture To An Audio Story")
     st.markdown("This App uses AI to generate a caption for any uploaded picture and a short audio story using the caption.")
     st.markdown("The code for this App is available on [GitHub](https://github.com/ajtechdeveloper/AIPictureToAudioStory)")
     st.markdown("For a full tutorial about this App, please refer to my blog post: [Generative AI App LangChain Hugging Face Open Source Models Tutorial](https://softwaredevelopercentral.blogspot.com/2024/05/generative-ai-app-langchain-hugging.html)")
     
-    # Add a loading message while the model is being loaded
-    if 'model_loaded' not in st.session_state:
-        with st.spinner('Loading AI model... This may take a minute on first run...'):
-            load_generator()
-            st.session_state.model_loaded = True
     
-    uploaded_file = st.file_uploader("Choose an image", type="jpg")
+    # Add information about the app
+    st.markdown("""
+    This app:
+    1. Generates a caption for your image 📝
+    2. Creates a short story based on the caption 📖
+    3. Converts the story to audio 🎧
+    """)
+
+    # File uploader
+    uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
     if uploaded_file is not None:
         try:
-            # Display the image
-            st.image(uploaded_file, caption="Uploaded Image", width=600)
-            
-            # Save the file temporarily
-            bytes_data = uploaded_file.getvalue()
-            with open(uploaded_file.name, "wb") as file:
-                file.write(bytes_data)
-            
-            # Generate caption
-            with st.spinner('Analyzing image...'):
-                scenario = image_to_text(uploaded_file.name)
-            
-            # Generate story
-            story = story_generator(scenario)
-            
-            if not story.startswith("Story generation failed"):
-                # Generate audio
-                text_to_audio(story)
+            # Create a spinner for image processing
+            with st.spinner('Processing your image...'):
+                # Display the uploaded image
+                st.image(uploaded_file, caption='Uploaded Image', width=400)
                 
-                # Display results
+                # Save the uploaded file temporarily
+                with open("temp_image.jpg", "wb") as f:
+                    f.write(uploaded_file.getvalue())
+
+            # Generate image caption
+            with st.spinner('Analyzing image and generating caption...'):
+                caption = image_to_text("temp_image.jpg")
                 st.subheader("📝 Image Caption")
-                st.write(scenario)
-                
+                st.write(caption)
+
+            # Generate story
+            with st.spinner('Creating a story based on the caption...'):
+                story = story_generator(caption)
                 st.subheader("📖 Generated Story")
                 st.write(story)
-                
-                # Audio player
+
+            # Create audio
+            with st.spinner('Converting story to audio...'):
+                text_to_audio(story)
                 st.subheader("🎧 Listen to the Story")
                 st.audio("audio.mp3")
-            else:
-                st.error(story)
-                
+
         except Exception as e:
             st.error(f"An error occurred: {str(e)}")
+            
         finally:
-            # Clean up the temporary file
-            if os.path.exists(uploaded_file.name):
-                os.remove(uploaded_file.name)
+            # Clean up temporary files
+            if os.path.exists("temp_image.jpg"):
+                os.remove("temp_image.jpg")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

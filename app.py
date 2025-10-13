@@ -48,6 +48,8 @@ def story_generator(scenario):
         - Between 40 and 60 words
         - Descriptive and engaging
         - Related to the scene
+        - Do not use references to alcohol in the story
+        - Do not use offensive language in the story
         
         Story: """
         

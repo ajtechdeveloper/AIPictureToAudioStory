@@ -43,13 +43,11 @@ def story_generator(scenario):
         )
         
         # Template optimized for OPT model
-        template = f"""Write a creative story about this scene: {scenario}
+        template = f"""Write a happy story about this caption: {scenario}
         Requirements:
         - Between 40 and 60 words
         - Descriptive and engaging
         - Related to the scene
-        - Do not use references to alcohol in the story
-        - Do not use offensive language in the story
         
         Story: """
         

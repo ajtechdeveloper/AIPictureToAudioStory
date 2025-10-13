@@ -44,15 +44,31 @@ def story_generator(scenario):
 
         # Template with context
         template = """
-        You are a story teller;
-        You can generate short stories based on a simple narrative
-        Your story should be no more than 60 words.
-        
-        CONTEXT: {scenario}
-        STORY:"""
+        <|system|>
+        You are a creative storyteller who writes engaging, descriptive stories.
+
+        <|context|>
+        SCENE DESCRIPTION: {scenario}
+
+        STORY REQUIREMENTS:
+        - Length: 40-60 words
+        - Style: Descriptive and engaging
+        - Structure: Clear beginning, middle, and end
+        - Focus: Stay relevant to the scene
+        - Tone: Creative and imaginative
+
+        <|template|>
+        Using the above context, write a story that:
+        1. Begins with a strong opening
+        2. Develops the scene naturally
+        3. Concludes meaningfully
+        4. Captures the essence of the described scene
+
+        <|story|>
+        """
         
         # Format the template with the scenario
-        context = template.format(scenario=scenario)
+        formatted_prompt = template.format(scenario=scenario)
         
         # Generate story
         result = generator(
@@ -65,15 +81,16 @@ def story_generator(scenario):
             repetition_penalty=1.2,
             pad_token_id=generator.tokenizer.eos_token_id
         )
-        
-        # Extract the story from the generated text
+
+        # Extract story from generated text
         generated_text = result[0]['generated_text']
         
         # Clean up the story
-        story = generated_text.split("Story:")[-1].strip()
+        # Extract text after <|story|> tag
+        story = generated_text.split("<|story|>")[-1].strip()
 
         # Clean up formatting
-        story = story.replace('\n', ' ').strip()
+        story = ' '.join(story.split())
 
         return story
     except Exception as e:

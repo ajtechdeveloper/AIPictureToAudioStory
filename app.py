@@ -38,7 +38,7 @@ def story_generator(scenario):
     """
 
     repo_id = "google/flan-t5-small"
-    llm = HuggingFaceHub(repo_id=repo_id, model_kwargs={"temperature": 1, "max_length": 64})
+    llm = HuggingFaceHub(repo_id=repo_id, model_kwargs={"temperature": 1, "max_length": 64}, task="text2text-generation")
     prompt = PromptTemplate(template=template, input_variables=["scenario"])
     story_llm = LLMChain(prompt=prompt, llm=llm)
     story = story_llm.predict(scenario=scenario)

@@ -98,8 +98,7 @@ def main():
     if uploaded_file is not None:
         try:
             # Create a placeholder for the image
-            image_placeholder = st.empty()
-            image_placeholder.image(uploaded_file, caption="Uploaded Image", use_container_width=True)
+            st.image(uploaded_file, caption="Uploaded Image", width=600)
             
             # Save the file temporarily
             bytes_data = uploaded_file.getvalue()

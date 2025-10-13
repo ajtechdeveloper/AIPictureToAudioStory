@@ -2,9 +2,9 @@ import streamlit as st
 from dotenv import find_dotenv, load_dotenv
 import os
 from gtts import gTTS
-from langchain.chains.llm import LLMChain
 from langchain_community.llms import HuggingFaceHub
-from langchain_core.prompts import PromptTemplate
+from langchain.chains import LLMChain
+from langchain.prompts import PromptTemplate
 from transformers import pipeline
 
 # To be used when running locally
@@ -37,16 +37,36 @@ def story_generator(scenario):
     STORY:
     """
 
-    repo_id = "google/flan-t5-small"
-    llm = HuggingFaceHub(repo_id=repo_id, model_kwargs={"temperature": 1, "max_length": 64}, task="text2text-generation")
+    repo_id = "tiiuae/falcon-7b-instruct"
+    
+    llm = HuggingFaceHub(
+        repo_id=repo_id,
+        task="text-generation",
+        model_kwargs={
+            "temperature": 0.7,
+            "max_length": 100,
+            "max_new_tokens": 100,
+        }
+    )
+    
     prompt = PromptTemplate(template=template, input_variables=["scenario"])
     story_llm = LLMChain(prompt=prompt, llm=llm)
-    story = story_llm.predict(scenario=scenario)
-    spl_word = 'STORY:'
-    res = story.split(spl_word, 1)
-    actual_story = res[1]
-    print(actual_story)
-    return actual_story
+    
+    try:
+        story = story_llm.predict(scenario=scenario)
+        spl_word = 'STORY:'
+        if spl_word in story:
+            res = story.split(spl_word, 1)
+            actual_story = res[1].strip()
+        else:
+            actual_story = story.strip()
+        
+        print(f"Generated story: {actual_story}")
+        return actual_story
+        
+    except Exception as e:
+        print(f"Error generating story: {str(e)}")
+        return "I apologize, but I couldn't generate a story at the moment. Please try again."
 
 
 # Image to text

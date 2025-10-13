@@ -38,7 +38,7 @@ def story_generator(scenario):
         # Initialize the text generation model
         generator = pipeline(
             'text-generation',
-            model='mistralai/Mistral-7B-v0.1',
+            model='TinyLlama/TinyLlama-1.1B-Chat-v1.0',
             token=hf_token
         )
         

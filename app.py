@@ -36,10 +36,14 @@ def story_generator(scenario):
     CONTEXT: {scenario}
     STORY:
     """
-
-    repo_id = "gpt2"
-    
-    llm = HuggingFaceHub(
+    try:
+        # Use a smaller, more reliable model
+        repo_id = "gpt2"  # This is a well-supported model on the HF API
+        
+        print(f"Attempting to generate story for scenario: {scenario}")
+        print(f"Using model: {repo_id}")
+        
+        llm = HuggingFaceHub(
             repo_id=repo_id,
             task="text-generation",
             model_kwargs={
@@ -50,23 +54,32 @@ def story_generator(scenario):
             },
             huggingfacehub_api_token=os.environ["HUGGINGFACEHUB_API_TOKEN"]
         )
-    
-    prompt = PromptTemplate(template=template, input_variables=["scenario"])
-    story_llm = LLMChain(prompt=prompt, llm=llm)
-    
-    try:
+        
+        prompt = PromptTemplate(
+            template=template,
+            input_variables=["scenario"]
+        )
+        
+        story_llm = LLMChain(prompt=prompt, llm=llm, verbose=True)
+        
+        print("Attempting to generate story...")
         story = story_llm.predict(scenario=scenario)
-        spl_word = 'STORY:'
-        if spl_word in story:
-            res = story.split(spl_word, 1)
-            actual_story = res[1].strip()
-        else:
-            actual_story = story.strip()
-        print(f"Generated story: {actual_story}")
-        return actual_story
+        print(f"Raw story output: {story}")
+        
+        # Clean up the story output
+        story = story.strip()
+        if not story:
+            raise ValueError("Generated story is empty")
+            
+        print(f"Final story: {story}")
+        return story
+        
     except Exception as e:
-        print(f"Error generating story: {str(e)}")
-        return "I apologize, but I couldn't generate a story at the moment. Please try again."
+        print(f"Error details: {str(e)}")
+        print(f"Error type: {type(e)}")
+        print(f"Current HF token status: {'Set' if os.environ.get('HUGGINGFACEHUB_API_TOKEN') else 'Not Set'}")
+        return f"Story generation failed: {str(e)}"
+    
 
 
 # Image to text

@@ -33,38 +33,43 @@ def image_to_text(image_path):
         raise
 
 def story_generator(scenario):
-    """Generate a short, happy, descriptive story (<60 words) about the scene."""
+    """Generate a happy, concise (≤60 words) story about the scene."""
     try:
         generator = pipeline(
-            "text2text-generation",
-            model="google/flan-t5-large",
-            token=hf_token
+            "text-generation",
+            model="HuggingFaceH4/zephyr-7b-beta",  
+            token=hf_token,
+            device_map="auto"
         )
 
         prompt = (
-            f"Write a joyful, descriptive short story (40–60 words) about this scene: {scenario}. "
-            "Make it vivid and uplifting. Include small details that make the scene come alive, "
-            "like sounds, colors, or feelings. Keep it wholesome and natural. "
-            "Avoid repetition and end with a happy tone."
+            f"You are a kind and creative storyteller. "
+            f"Write a joyful, family-friendly short story (40–60 words) about this scene: {scenario}. "
+            "Make it descriptive and full of warm feelings. Avoid repetition, negativity, or offensive language. "
+            "End with a positive or peaceful moment."
         )
 
         result = generator(
             prompt,
-            max_length=110,         
-            temperature=0.95,        
-            top_p=0.9,               
-            repetition_penalty=1.7,  
-            num_return_sequences=1
+            max_new_tokens=90,
+            temperature=0.85,
+            top_p=0.9,
+            repetition_penalty=2.8,  # strong repetition control
+            no_repeat_ngram_size=4,  # prevents repeating sequences
+            num_return_sequences=1,
+            do_sample=True
         )
 
-        story = result[0]["generated_text"].strip()
+        story = result[0]["generated_text"]
+        if "about this scene:" in story:
+            story = story.split("about this scene:")[-1].strip()
 
-        # Trim to ~60 words max
+        # Trim to <= 60 words
         words = story.split()
         if len(words) > 60:
             story = " ".join(words[:60]) + "..."
 
-        return story
+        return story.strip()
 
     except Exception as e:
         st.error(f"Error in story generation: {str(e)}")

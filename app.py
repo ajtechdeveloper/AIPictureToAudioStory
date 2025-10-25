@@ -3,6 +3,7 @@ import os
 from transformers import pipeline
 from gtts import gTTS
 from huggingface_hub import login
+import requests
 
 # To be used when running locally
 # Also .env file to be created at root folder level
@@ -33,33 +34,28 @@ def image_to_text(image_path):
         raise
 
 def story_generator(scenario):
-    """Generate a happy, short (≤60 words) story about the scene."""
+    """Generate a short, happy, family-friendly story using Hugging Face Inference API."""
     try:
-        generator = pipeline(
-            "text2text-generation",
-            model="mistralai/Mistral-7B-Instruct-v0.3", 
-            token=hf_token
-        )
+        
+        API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3"
+        headers = {"Authorization": f"Bearer {hf_token}"}
 
         prompt = (
-            f"Write a short, happy story (40–60 words) about this scene: {scenario}. "
-            "Make it positive, imaginative, and family-friendly. Avoid repetition or lists. "
-            "End naturally with a cheerful feeling."
+            f"You are a kind, creative storyteller. "
+            f"Write a joyful, wholesome short story (40–60 words) about this scene: {scenario}. "
+            "Make it vivid, positive, and easy to read. Avoid repetition, negativity, or lists. "
+            "End with a warm and happy tone."
         )
 
-        result = generator(
-            prompt,
-            max_new_tokens=80,
-            temperature=0.9,
-            top_p=0.9,
-            repetition_penalty=1.5,
-            num_return_sequences=1,
-            do_sample=True
-        )
+        payload = {"inputs": prompt, "parameters": {"max_new_tokens": 80, "temperature": 0.9}}
 
-        story = result[0]["generated_text"].strip()
+        response = requests.post(API_URL, headers=headers, json=payload)
+        response.raise_for_status()
 
-        # keep only up to 60 words
+        data = response.json()
+        story = data[0]["generated_text"].strip()
+
+        # Trim to 60 words max
         words = story.split()
         if len(words) > 60:
             story = " ".join(words[:60]) + "..."
@@ -67,8 +63,8 @@ def story_generator(scenario):
         return story
 
     except Exception as e:
-        st.error(f"Error in story generation: {str(e)}")
-        raise
+        st.error(f"Error generating story: {e}")
+        return None
 
 
 def text_to_audio(text):

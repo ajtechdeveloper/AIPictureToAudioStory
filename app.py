@@ -33,44 +33,38 @@ def image_to_text(image_path):
         raise
 
 def story_generator(scenario):
-    """Generate a short story based on the image caption"""
+    """Generate a short, happy, family-friendly story (<60 words) about the scene."""
     try:
-        # Initialize the text generation model
         generator = pipeline(
-            'text-generation',
-            model='facebook/opt-350m',
+            'text2text-generation',
+            model='google/flan-t5-base',
             token=hf_token
         )
-        
-        # Template optimized for OPT model
-        template = f"""Write a happy story about this scene: {scenario}
-        Requirements:
-        - Between 40 and 60 words
-        - Descriptive and engaging
-        - Related to the scene
-        
-        Story: """
-        
-        # Generate story
-        result = generator(
-            template,
-            max_length=150,
-            temperature=1,
-            top_p=0.9,
-            do_sample=True,
-            num_return_sequences=1,
-            repetition_penalty=1.2,
-            early_stopping=True
+
+        prompt = (
+            f"Write a happy and wholesome story about this scene: {scenario}. "
+            "The story should be between 40 and 60 words, positive, safe for all ages, "
+            "and describe a joyful moment related to the scene."
         )
-        
-        # Extract and clean the story
-        generated_text = result[0]['generated_text']
-        story = generated_text.split("Story:")[-1].strip()
-        
-        # Clean up formatting
-        story = ' '.join(story.split())
+
+        result = generator(
+            prompt,
+            max_length=80,
+            temperature=0.7,
+            top_p=0.9,
+            repetition_penalty=1.1,
+            num_return_sequences=1
+        )
+
+        story = result[0]['generated_text']
+
+        # Enforce word count limit
+        words = story.split()
+        if len(words) > 60:
+            story = " ".join(words[:60]) + "..."
 
         return story
+
     except Exception as e:
         st.error(f"Error in story generation: {str(e)}")
         raise

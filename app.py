@@ -33,32 +33,33 @@ def image_to_text(image_path):
         raise
 
 def story_generator(scenario):
-    """Generate a short, happy story (<60 words) about the scene."""
+    """Generate a short, happy, descriptive story (<60 words) about the scene."""
     try:
         generator = pipeline(
             "text2text-generation",
-            model="google/flan-t5-large",   
+            model="google/flan-t5-large",
             token=hf_token
         )
 
         prompt = (
-            f"Write a short, happy story (under 60 words) about this scene: {scenario}. "
-            "Make it cheerful, imaginative, and positive. Avoid repetition and negativity. "
-            "Focus on joy, friendship, laughter, or nature. End naturally."
+            f"Write a joyful, descriptive short story (40–60 words) about this scene: {scenario}. "
+            "Make it vivid and uplifting. Include small details that make the scene come alive, "
+            "like sounds, colors, or feelings. Keep it wholesome and natural. "
+            "Avoid repetition and end with a happy tone."
         )
 
         result = generator(
             prompt,
-            max_length=90,         
-            temperature=0.8,        
-            top_p=0.92,            
-            repetition_penalty=2.5,
+            max_length=110,         
+            temperature=0.95,        
+            top_p=0.9,               
+            repetition_penalty=1.7,  
             num_return_sequences=1
         )
 
         story = result[0]["generated_text"].strip()
 
-        # Enforce concise output
+        # Trim to ~60 words max
         words = story.split()
         if len(words) > 60:
             story = " ".join(words[:60]) + "..."

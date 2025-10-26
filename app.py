@@ -33,44 +33,37 @@ def image_to_text(image_path):
         raise
 
 def story_generator(scenario):
-    """Generate a happy, concise (≤60 words) story about the scene."""
+    """Generate a short, happy, family-friendly story (<60 words) about the scene."""
     try:
         generator = pipeline(
-            "text-generation",
-            model="HuggingFaceH4/zephyr-7b-beta", 
-            token=hf_token,
-            device_map="auto"
+            'text2text-generation',
+            model='google/flan-t5-base',
+            token=hf_token
         )
 
         prompt = (
-            f"You are a kind and creative storyteller. "
-            f"Write a joyful, family-friendly short story (40–60 words) about this scene: {scenario}. "
-            "Make it descriptive and full of warm feelings. Avoid repetition, negativity, or offensive language. "
-            "End with a positive or peaceful moment."
+            f"Write a happy and wholesome story about this scene: {scenario}. "
+            "The story should be less than 60 words, positive, safe for all ages, "
+            "and describe a joyful moment related to the scene."
         )
 
         result = generator(
             prompt,
-            max_new_tokens=90,
-            temperature=0.85,
+            max_length=80,
+            temperature=0.7,
             top_p=0.9,
-            repetition_penalty=2.8,  # strong repetition control
-            no_repeat_ngram_size=4,  # prevents repeating sequences
-            num_return_sequences=1,
-            do_sample=True
+            repetition_penalty=1.1,
+            num_return_sequences=1
         )
 
-        story = result[0]["generated_text"]
-        # Extract only the story portion (cut off the prompt)
-        if "about this scene:" in story:
-            story = story.split("about this scene:")[-1].strip()
+        story = result[0]['generated_text']
 
-        # Trim to <= 60 words
+        # Enforce word count limit
         words = story.split()
         if len(words) > 60:
             story = " ".join(words[:60]) + "..."
 
-        return story.strip()
+        return story
 
     except Exception as e:
         st.error(f"Error in story generation: {str(e)}")

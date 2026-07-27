@@ -18,7 +18,7 @@ def image_to_text(image_path):
     try:
         # Initialize the image captioning model
         caption_model = pipeline(
-            "image-text-to-text", 
+            "image-to-text", 
             model="Salesforce/blip-image-captioning-base",
             use_auth_token=hf_token
         )
@@ -96,7 +96,7 @@ def main():
     3. Converts the story to audio 🎧
     """)
     st.markdown("The code for this App is available on [GitHub](https://github.com/ajtechdeveloper/AIPictureToAudioStory)")
-    st.markdown("For a full tutorial about this App, please refer to my blog post: [Generative AI App LangChain Hugging Face Open Source Models Tutorial](https://softwaredevelopercentral.blogspot.[...]")
+    st.markdown("For a full tutorial about this App, please refer to my blog post: [Generative AI App LangChain Hugging Face Open Source Models Tutorial](https://softwaredevelopercentral.blogspot.[...]
     
     # File uploader
     uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])

@@ -36,13 +36,13 @@ def story_generator(scenario):
     """Generate a short, happy, family-friendly story (<60 words) about the scene."""
     try:
         generator = pipeline(
-            'text2text-generation',
-            model='google/flan-t5-base',
-            token=hf_token
+            "text-generation",
+            model="microsoft/Phi-3-mini-4k-instruct",
+            token=hf_token,
         )
 
         prompt = (
-            f"Write a happy and wholesome story about this scene: {scenario}. "
+            f"You are an excellent storyteller. Write a happy and wholesome story about this scene: {scenario}. "
             "The story should be less than 60 words, positive, safe for all ages, "
             "and describe a joyful moment related to the scene."
         )

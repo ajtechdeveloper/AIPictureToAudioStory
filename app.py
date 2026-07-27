@@ -20,7 +20,7 @@ def image_to_text(image_path):
         caption_model = pipeline(
             "image-to-text", 
             model="Salesforce/blip-image-captioning-base",
-            use_auth_token=hf_token
+            token=hf_token
         )
         
         # Generate caption

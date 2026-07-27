@@ -41,23 +41,11 @@ def story_generator(scenario):
             token=hf_token,
         )
 
-        prompt = f"""
-        You are an excellent storyteller.
-
-        Scene:
-        {scenario}
-
-        Write exactly one happy and joyful short story.
-
-        Requirements:
-        - 40 to 60 words
-        - One beginning, one middle, one ending
-        - Include emotions
-        - Make it imaginative
-        - Do not repeat words or sentences
-        - Do not describe the image literally
-        - Suitable for all ages
-        """
+        prompt = ( 
+                  f"Write a happy and wholesome story about this scene: {scenario}. " 
+                  "The story should be less than 60 words, positive, safe for all ages, " 
+                  "and describe a joyful moment related to the scene. Do not repeat words or sentences" 
+        )
 
         result = generator(
             prompt,

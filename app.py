@@ -36,8 +36,8 @@ def story_generator(scenario):
     """Generate a short, happy, family-friendly story (<60 words) about the scene."""
     try:
         generator = pipeline(
-            "text-generation",
-            model="TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+            "text2text-generation",
+            model="google/flan-t5-base",
             token=hf_token,
         )
 

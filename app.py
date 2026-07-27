@@ -88,6 +88,9 @@ def main():
     )
     
     st.title("AI In Action: Transform A Picture To An Audio Story")
+    st.write("Transformers:", transformers.__version__)
+    st.write("Python:", sys.version)
+    st.write("Transformers location:", transformers.__file__)
     # Add information about the app
     st.markdown("""
     Using AI this App:
